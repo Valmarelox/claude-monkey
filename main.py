@@ -3,6 +3,7 @@ import inspect
 from rich import print
 from glob import glob
 from pathlib import Path
+from argparse import ArgumentParser
 
 
 SYSTEM_PROMPT = '''
@@ -80,6 +81,12 @@ def builder(tool_signature: str, tool_description: str, error: str = ''):
     print(message.content[0].text)
     codeblock = message.content[0].text
     dependencies, codeblock = codeblock.split('\n', 1)
+    codeblock = codeblock.strip()
+    if codeblock.startswith('```python'):
+        codeblock = codeblock.split('\n', 1)[1]
+    if codeblock.endswith('```'):
+        codeblock = codeblock.rsplit('\n', 1)[0]
+    codeblock = codeblock.strip()
 
     for dep in dependencies.split():
         ensure_package(dep)
@@ -134,7 +141,7 @@ def load_tools():
     return tools
 
 
-def model_loop(prompt: str):
+def model_loop(prompt: str, debug=False):
     global tools, tools_def
     messages=[
             {
@@ -153,7 +160,7 @@ def model_loop(prompt: str):
         message = client.messages.create(
             model="claude-opus-4-20250514",
             max_tokens=1000,
-            temperature=1,
+            temperature=0,
             system=SYSTEM_PROMPT,
             tools=tools_def,
             messages=messages
@@ -197,14 +204,24 @@ def model_loop(prompt: str):
             print("Max tokens reached, continuing...")
             continue
 
+    if debug:
+        print("Debug mode - printing entire conversation")
+        print(messages)
+
 def main():
+    parser = ArgumentParser(description='Money-Claude')
+    parser.add_argument('query', help='Query')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     #req = "Help a student in math. How much is 1516165123166161261661216+22165906916029161261516161?"
     #req = "is https://google.com/ up right now?"
     #req = "generate an RSA key pair with 2048 bits return it in PEM format"
     #req = "is this number a prime? 696270964641135200546572351045433185676863336787737"
+    #req = "When was the best time to buy palantir stock in the last year? What was the price at that time? What is the current price?"
+    args = parser.parse_args()
+    
     load_tools()
     print("Loaded tools:", tools.keys())
-    model_loop(req)
+    model_loop(args.query, debug=args.debug)
     
     
 
