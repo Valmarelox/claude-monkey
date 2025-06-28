@@ -24,3 +24,8 @@ Based on the data, here's what I found about Palantir (PLTR) stock over the last
 
 This represents one of the most impressive stock performances over the past year, with those who bought at the August 2024 low seeing more than a 5x return on their investment.
 ```
+
+### TODO
+1. Integrate a feedback loop for broken tools and exceptions
+2. Integrate with openwebui
+3. Integrate with MCPs?
